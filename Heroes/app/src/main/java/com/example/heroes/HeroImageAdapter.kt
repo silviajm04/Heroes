@@ -1,19 +1,15 @@
 package com.example.heroes
 
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat.startActivity
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.item_image.view.*
+
 class HeroImageAdapter (val imageSuperHero: ArrayList<ImageResponse>) : RecyclerView.Adapter<HeroImageAdapter.ViewHolder>() {
-
-
-
+    var arrayimages = imageSuperHero
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeroImageAdapter.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
 
@@ -21,17 +17,17 @@ class HeroImageAdapter (val imageSuperHero: ArrayList<ImageResponse>) : Recycler
     }
 
     override fun getItemCount(): Int {
-
-        return imageSuperHero.size
+        return arrayimages.size
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = imageSuperHero[position]
+        val item = arrayimages[position]
         holder.bind(item)
     }
 
-
-
+     fun setItems(arrayimagesUpdate : ArrayList<ImageResponse>){
+        arrayimages = arrayimagesUpdate
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var context: Context = view.context
@@ -47,4 +43,5 @@ class HeroImageAdapter (val imageSuperHero: ArrayList<ImageResponse>) : Recycler
             }
         }
     }
+
 }

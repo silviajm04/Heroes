@@ -12,66 +12,63 @@ import org.jetbrains.anko.uiThread
 import org.jetbrains.anko.yesButton
 
 class MainActivity : AppCompatActivity(){
-     var imagesHeroArray : ArrayList<ImageResponse> = ArrayList<ImageResponse>()
+
     lateinit var heroImageAdapter: HeroImageAdapter
+    private lateinit var layoutManager: LinearLayoutManager
+    private var imagesHeroArray : ArrayList<ImageResponse> = ArrayList<ImageResponse>()
     var init = 1
     var limit = 0
-   // var idImageHero = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        downloadSuperHeroes()
 
+        layoutManager = LinearLayoutManager(this)
+        rvSuperheros.layoutManager = layoutManager
+        downloadSuperHeroes()
 
         rvSuperheros.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                if (isLastItemDisplaying(recyclerView)) { //Calling the method getdata again
-                    downloadSuperHeroes()
+                val visibleItemCount: Int = (recyclerView.layoutManager as LinearLayoutManager?)!!.childCount
+                val pastVisibleItem: Int = (recyclerView.layoutManager as LinearLayoutManager?)!!.findFirstCompletelyVisibleItemPosition()
+                val total: Int = recyclerView.adapter!!.itemCount
+
+                if (dy > 0){
+                    if (visibleItemCount + pastVisibleItem >= total) {
+
+                        downloadSuperHeroes()
+                    }
                 }
             }
         })
-
-
     }
-
-    private fun isLastItemDisplaying(recyclerView: RecyclerView): Boolean {
-        if (recyclerView.adapter!!.itemCount != 0) {
-            val lastVisibleItemPosition =
-                (recyclerView.layoutManager as LinearLayoutManager?)!!.findLastCompletelyVisibleItemPosition()
-            if (lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.adapter!!.itemCount - 1) return true
-        }
-        return false
-    }
-
-
-
 
     private fun downloadSuperHeroes(){
 
-        limit = limit + 10
-        Log.d("-------------------LIMIT", limit.toString())
-        Log.d("-------------------INIT", init.toString())
+        limit += 10
         for(numberId in init..limit) {
             getImageById((numberId).toString())
-
         }
-        init = limit
+        init = limit + 1
     }
-
 
     private fun getImageById(idHero: String) {
         doAsync {
             val call = getRetrofit().create(APIService::class.java).getImageById("$idHero/image").execute()
-            var imageHero = call.body() as ImageResponse
-            var error = call.errorBody()
+            val imageHero = call.body() as ImageResponse
+            val error = call.errorBody()
             uiThread {
                 if(imageHero.response == "success") {
                     imagesHeroArray.add(imageHero)
-                    initCharacter(imageHero)
+                    if(::heroImageAdapter.isInitialized){
+
+                        updateView()
+                    }else{
+                        initCharacter(imageHero)
+                    }
                 }else{
-                    showErrorDialog()
+                    // showErrorDialog()
                     Log.d("TAG", "message: " + error.toString())
                 }
             }
@@ -79,17 +76,21 @@ class MainActivity : AppCompatActivity(){
     }
 
     private fun showErrorDialog() {
-        alert("Ha ocurrido un error, inténtelo de nuevo.") {
+        alert("Lo sentimos ha ocurrido un error") {
             yesButton { }
         }.show()
     }
 
     private fun initCharacter(imageHero: ImageResponse) {
-
         heroImageAdapter = HeroImageAdapter(imagesHeroArray)
         rvSuperheros.setHasFixedSize(true)
         rvSuperheros.layoutManager = LinearLayoutManager(this)
         rvSuperheros.adapter = heroImageAdapter
-
+    }
+    private fun updateView() {
+        heroImageAdapter.setItems(imagesHeroArray)
+        heroImageAdapter.notifyDataSetChanged()
     }
 }
+
+
